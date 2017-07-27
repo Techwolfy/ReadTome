@@ -2,6 +2,7 @@
 
 import json
 import sys
+import os
 from html.parser import HTMLParser
 import ebooklib
 from ebooklib import epub
@@ -41,7 +42,6 @@ class Parser(HTMLParser):
 			return tagstart + 'emphasis level="strong">'
 		elif tag == 'p':
 			return '\n'
-		#	return tagstart + 'paragraph>'
 		else:
 			return ''
 
@@ -60,13 +60,13 @@ def main(filename):
 			ssml = Parser().feed(html).get_data()
 
 			if selected == str(index) or selected == 'all':
-				generateAudio(index, ssml[:1000])
+				generateAudio(os.path.splitext(filename)[0], index, ssml)
 			elif selected == -1:
 				print(str(index) + ': ' + ssml[:40].replace('\n', ' ').strip() + '...\n')
 
-def generateAudio(index, ssml):
-	with open('chapter' + str(index) + '.mp3', 'wb') as mp3:
-		voice = '<voice-transformation type="Custom" glottal_tension="-80%" rate="fast">'
+def generateAudio(filename, index, ssml):
+	with open(filename + '-part' + str(index) + '.mp3', 'wb') as mp3:
+		voice = '<voice-transformation type="Custom" glottal_tension="-80%" rate="20%">'
 		data = tts.synthesize(voice + ssml + '</voice-transformation>', accept='audio/mp3', voice='en-US_AllisonVoice')
 		mp3.write(data)
 
