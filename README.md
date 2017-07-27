@@ -3,6 +3,8 @@ ReadTome
 
 A tool for converting ebooks into audiobooks with IBM's Watson Cognitive Services TTS API.
 
+<img src="readtome.gif">
+
 
 Dependencies
 ------------
