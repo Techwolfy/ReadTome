@@ -21,17 +21,14 @@ class Parser(HTMLParser):
 		self.strict = False
 		self.convert_charrefs = True
 		self.fed = []
-	def handle_data(self, d):
-		self.fed.append(d)
+	def handle_data(self, data):
+		self.fed.append(data.strip())
 	def handle_starttag(self, tag, attrs):
 		self.fed.append(self.process_tag(tag, True))
 	def handle_endtag(self, tag):
 		self.fed.append(self.process_tag(tag, False))
 	def get_data(self):
-		out = '<voice-transformation type="Custom" glottal_tension="-80%" rate="fast">'
-		out += ''.join(self.fed)
-		out += '</voice-transformation>'
-		return out
+		return ''.join(self.fed)
 	def feed(self, data):
 		super().feed(data)
 		return self
@@ -42,24 +39,35 @@ class Parser(HTMLParser):
 			return tagstart + 'emphasis level="strong">'
 		elif tag == 'i':
 			return tagstart + 'emphasis level="strong">'
-		#elif tag == 'p':
+		elif tag == 'p':
+			return '\n'
 		#	return tagstart + 'paragraph>'
 		else:
 			return ''
 
 def main(filename):
+	#Get chapter selection
+	if len(sys.argv) > 2:
+		selected = sys.argv[2]
+	else:
+		selected = -1
+
 	#Load and process epub
 	book = epub.read_epub(filename)
 	for index, chapter in enumerate(book.get_items_of_type(ebooklib.ITEM_DOCUMENT)):
 		if chapter.is_chapter():
 			html = chapter.get_content().decode()
 			ssml = Parser().feed(html).get_data()
-			#generateAudio(index, ssml)
-			print(ssml)
+
+			if selected == str(index) or selected == 'all':
+				generateAudio(index, ssml[:1000])
+			elif selected == -1:
+				print(str(index) + ': ' + ssml[:40].replace('\n', ' ').strip() + '...\n')
 
 def generateAudio(index, ssml):
-	with open('chapter' + index + '.mp3', 'wb') as mp3:
-		data = tts.synthesize(ssml, accept='audio/mp3', voice='en-US_AllisonVoice')
+	with open('chapter' + str(index) + '.mp3', 'wb') as mp3:
+		voice = '<voice-transformation type="Custom" glottal_tension="-80%" rate="fast">'
+		data = tts.synthesize(voice + ssml + '</voice-transformation>', accept='audio/mp3', voice='en-US_AllisonVoice')
 		mp3.write(data)
 
 if __name__ == '__main__':
